@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BolKhata - Voice Ledger & Bill Print</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .pulse-recording {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceipt, #printableReceipt * { visibility: visible; }
+            #printableReceipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+    <!-- Top Navigation with Editable Shop Name -->
+    <header class="bg-indigo-700 text-white shadow-md p-4 sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-microphone-lines text-2xl text-yellow-300"></i>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 id="shopNameDisplay" class="text-xl font-bold tracking-wide">Meri Dukaan</h1>
+                        <button onclick="editShopName()" class="text-xs text-indigo-200 hover:text-white">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+                    <span class="text-[11px] text-indigo-200">BolKhata Smart Ledger</span>
+                </div>
+            </div>
+            <div class="text-xs text-indigo-100 flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
+                Ready
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 space-y-6">
+
+        <!-- Stats Bar -->
+        <section class="grid grid-cols-3 gap-3">
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-xs text-slate-500 font-medium">Aaj Ki Bikri</p>
+                <p id="totalSales" class="text-lg md:text-xl font-bold text-slate-800 mt-1">₹0</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-xs text-rose-500 font-medium">Market Udhari</p>
+                <p id="totalDue" class="text-lg md:text-xl font-bold text-rose-600 mt-1">₹0</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-xs text-emerald-600 font-medium">Jama (Received)</p>
+                <p id="totalPaid" class="text-lg md:text-xl font-bold text-emerald-600 mt-1">₹0</p>
+            </div>
+        </section>
+
+        <!-- Voice Recorder Section -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+            <p class="text-xs font-semibold tracking-wider text-indigo-600 uppercase mb-2">Bol Kar Khata Update Karein</p>
+            <h2 class="text-base md:text-lg font-semibold text-slate-700 mb-4">Mic dabayein aur boliye (Hinglish / Hindi)</h2>
+
+            <div class="flex justify-center my-3">
+                <button id="micBtn" onclick="toggleListening()" class="w-20 h-20 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex flex-col items-center justify-center shadow-lg transition-all focus:outline-none">
+                    <i id="micIcon" class="fa-solid fa-microphone text-2xl"></i>
+                    <span id="micStatus" class="text-[10px] mt-1 font-semibold uppercase">Bolna Shuru</span>
+                </button>
+            </div>
+
+            <p id="speechLiveText" class="text-sm text-slate-500 italic mt-3 min-h-[24px]">
+                "Sharma ji ko 10 bori cement 350 rate se bheja, 1000 cash mila"
+            </p>
+
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <p class="text-xs text-slate-400 mb-2">Demo buttons click karein:</p>
+                <div class="flex flex-wrap gap-2 justify-center text-xs">
+                    <button onclick="simulateVoice('Gupta ji ko 5 kilo cheeni 45 per kg di, 100 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-3 rounded-full border border-slate-200">
+                        🛒 Cheeni Demo
+                    </button>
+                    <button onclick="simulateVoice('Ramesh ko 20 bori cement 350 rate se di, 2000 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-3 rounded-full border border-slate-200">
+                        🏗️ Cement Demo
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parsed Data Review Card -->
+        <section id="parsedCard" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between pb-3 border-b border-indigo-100">
+                <h3 class="font-bold text-indigo-900 flex items-center">
+                    <i class="fa-solid fa-bolt text-amber-500 mr-2"></i> Voice Parsed Result
+                </h3>
+                <span class="text-xs bg-indigo-200 text-indigo-800 font-semibold px-2 py-0.5 rounded">Auto Detected</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3 text-sm">
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Grahak Ka Naam</label>
+                    <input id="parsedName" type="text" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-800 font-medium">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Grahak Mobile Number</label>
+                    <input id="parsedPhone" type="tel" placeholder="10 digit number" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-800 font-medium">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Samaan / Item</label>
+                    <input id="parsedItem" type="text" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-800 font-medium">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Total Raashi (₹)</label>
+                    <input id="parsedTotal" type="number" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-800 font-medium" oninput="calculateBalance()">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Jama Mila (Paid ₹)</label>
+                    <input id="parsedPaid" type="number" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-emerald-700 font-semibold" oninput="calculateBalance()">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500 font-semibold">Shesh Baaki (Due ₹)</label>
+                    <input id="parsedDue" type="number" class="w-full mt-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-rose-700 font-bold" readonly>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <button onclick="saveTransaction()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg shadow">
+                    <i class="fa-solid fa-check mr-1"></i> Khata Mein Save Karein
+                </button>
+            </div>
+        </section>
+
+        <!-- Customer Ledger Table -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-book-bookmark text-indigo-600 mr-2"></i> Grahak Ledger
+                </h3>
+                <button onclick="clearAllData()" class="text-xs text-rose-500 hover:text-rose-700 font-medium">
+                    <i class="fa-solid fa-trash mr-1"></i> Reset Khata
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                        <tr>
+                            <th class="p-3">Grahak Name</th>
+                            <th class="p-3">Samaan / Vivaran</th>
+                            <th class="p-3">Total (₹)</th>
+                            <th class="p-3">Jama (₹)</th>
+                            <th class="p-3">Baaki Udhari (₹)</th>
+                            <th class="p-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Hidden Bill Receipt for Printing -->
+    <div id="printableReceipt" class="hidden max-w-sm mx-auto p-6 bg-white border border-dashed border-slate-400 font-mono text-xs text-slate-900">
+        <div class="text-center pb-3 border-b border-slate-300">
+            <h2 id="receiptShopName" class="text-base font-bold uppercase">Meri Dukaan</h2>
+            <p class="text-[10px] text-slate-500">BOLKHATA CASH MEMO / RECEIPT</p>
+            <p id="receiptDate" class="text-[10px] text-slate-500"></p>
+        </div>
+        <div class="py-3 border-b border-slate-300 space-y-1">
+            <p><strong>Grahak:</strong> <span id="receiptCustomer"></span></p>
+            <p><strong>Phone:</strong> <span id="receiptPhone"></span></p>
+            <p><strong>Item:</strong> <span id="receiptItem"></span></p>
+        </div>
+        <div class="py-3 border-b border-slate-300 space-y-1">
+            <div class="flex justify-between"><span>Kul Raashi (Total):</span><span id="receiptTotal" class="font-bold"></span></div>
+            <div class="flex justify-between"><span>Jama (Paid):</span><span id="receiptPaid"></span></div>
+            <div class="flex justify-between font-bold text-sm"><span>Shesh Baaki (Due):</span><span id="receiptDue"></span></div>
+        </div>
+        <div class="text-center pt-3 text-[10px] text-slate-500">
+            <p>Aapka hisaab safe hai. Dhanyawad!</p>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "bolkhata_records_universal_v3";
+        const SHOP_KEY = "bolkhata_shop_name";
+        let transactions = [];
+        let recognition = null;
+        let isListening = false;
+
+        function editShopName() {
+            const current = localStorage.getItem(SHOP_KEY) || "Meri Dukaan";
+            const updated = prompt("Apni Dukaan ka naam likhein:", current);
+            if (updated && updated.trim()) {
+                localStorage.setItem(SHOP_KEY, updated.trim());
+                document.getElementById('shopNameDisplay').innerText = updated.trim();
+            }
+        }
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'hi-IN';
+
+            recognition.onstart = function() {
+                isListening = true;
+                const mic = document.getElementById('micBtn');
+                mic.classList.add('pulse-recording', 'bg-rose-600');
+                mic.classList.remove('bg-indigo-600');
+                document.getElementById('micStatus').innerText = "Sun raha hu...";
+            };
+
+            recognition.onresult = function(event) {
+                const speechText = event.results[0][0].transcript;
+                document.getElementById('speechLiveText').innerText = `"${speechText}"`;
+                processVoiceText(speechText);
+            };
+
+            recognition.onerror = resetMicUI;
+            recognition.onend = resetMicUI;
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                alert("Speech recognition support nahi kar raha.");
+                return;
+            }
+            isListening ? recognition.stop() : recognition.start();
+        }
+
+        function resetMicUI() {
+            isListening = false;
+            const mic = document.getElementById('micBtn');
+            mic.classList.remove('pulse-recording', 'bg-rose-600');
+            mic.classList.add('bg-indigo-600');
+            document.getElementById('micStatus').innerText = "Bolna Shuru";
+        }
+
+        function simulateVoice(sampleText) {
+            document.getElementById('speechLiveText').innerText = `"${sampleText}"`;
+            processVoiceText(sampleText);
+        }
+
+        function processVoiceText(text) {
+            let lower = text.toLowerCase();
+            let name = "Grahak";
+            let item = "Saaman";
+
+            let matchKo = text.match(/([a-zA-Z\u0900-\u097F]+)\s*(?:thekedar|ji)?\s*(?:ko|se)/i);
+            if (matchKo && matchKo[1]) name = matchKo[1].trim();
+
+            let itemMatch = text.match(/(?:ko|se)\s+(.*?)(?=\s+\d+\s*(?:rate|per|ki|ka|ke|rate se|bheja|di|jama|cash)|$)/i);
+            if (itemMatch && itemMatch[1]) item = itemMatch[1].trim();
+
+            let nums = text.match(/\b\d+\b/g);
+            let total = 0, paid = 0;
+
+            if (nums && nums.length >= 2) {
+                if (lower.includes("jama") || lower.includes("cash") || lower.includes("mila")) {
+                    paid = parseFloat(nums[nums.length - 1]);
+                    let remainingNums = nums.slice(0, nums.length - 1);
+                    total = remainingNums.length >= 2 ? parseFloat(remainingNums[0]) * parseFloat(remainingNums[1]) : parseFloat(remainingNums[0]);
+                } else {
+                    total = parseFloat(nums[0]) * parseFloat(nums[1]);
+                }
+            } else if (nums && nums.length === 1) {
+                if (lower.includes("jama") || lower.includes("mila")) {
+                    paid = parseFloat(nums[0]);
+                    total = paid;
+                } else {
+                    total = parseFloat(nums[0]);
+                }
+            }
+
+            let due = Math.max(0, total - paid);
+
+            document.getElementById('parsedName').value = name;
+            document.getElementById('parsedPhone').value = "9876543210";
+            document.getElementById('parsedItem').value = item;
+            document.getElementById('parsedTotal').value = total;
+            document.getElementById('parsedPaid').value = paid;
+            document.getElementById('parsedDue').value = due;
+
+            document.getElementById('parsedCard').classList.remove('hidden');
+        }
+
+        function calculateBalance() {
+            const total = parseFloat(document.getElementById('parsedTotal').value) || 0;
+            const paid = parseFloat(document.getElementById('parsedPaid').value) || 0;
+            document.getElementById('parsedDue').value = Math.max(0, total - paid);
+        }
+
+        function loadTransactions() {
+            const savedShop = localStorage.getItem(SHOP_KEY);
+            if (savedShop) document.getElementById('shopNameDisplay').innerText = savedShop;
+
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try { transactions = JSON.parse(stored); } catch(e) { transactions = []; }
+            } else {
+                transactions = [
+                    { id: 1, name: "Ramesh Thekedar", phone: "9876543210", item: "20 Bag Cement", total: 7000, paid: 2000, due: 5000, date: new Date().toLocaleDateString('en-IN') }
+                ];
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            }
+            renderTable();
+        }
+
+        function saveTransaction() {
+            const name = document.getElementById('parsedName').value.trim() || "Grahak";
+            const phone = document.getElementById('parsedPhone').value.trim() || "9876543210";
+            const item = document.getElementById('parsedItem').value.trim() || "Saaman";
+            const total = parseFloat(document.getElementById('parsedTotal').value) || 0;
+            const paid = parseFloat(document.getElementById('parsedPaid').value) || 0;
+            const due = parseFloat(document.getElementById('parsedDue').value) || 0;
+
+            const newEntry = {
+                id: Date.now(),
+                name: name,
+                phone: phone,
+                item: item,
+                total: total,
+                paid: paid,
+                due: due,
+                date: new Date().toLocaleDateString('en-IN')
+            };
+
+            transactions.unshift(newEntry);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+            document.getElementById('parsedCard').classList.add('hidden');
+            renderTable();
+        }
+
+        function printSlip(id) {
+            const item = transactions.find(t => t.id === id);
+            if (!item) return;
+
+            const shopName = localStorage.getItem(SHOP_KEY) || "Meri Dukaan";
+            document.getElementById('receiptShopName').innerText = shopName;
+            document.getElementById('receiptDate').innerText = item.date || new Date().toLocaleDateString('en-IN');
+            document.getElementById('receiptCustomer').innerText = item.name;
+            document.getElementById('receiptPhone').innerText = item.phone;
+            document.getElementById('receiptItem').innerText = item.item;
+            document.getElementById('receiptTotal').innerText = `₹${item.total.toLocaleString('en-IN')}`;
+            document.getElementById('receiptPaid').innerText = `₹${item.paid.toLocaleString('en-IN')}`;
+            document.getElementById('receiptDue').innerText = `₹${item.due.toLocaleString('en-IN')}`;
+
+            window.print();
+        }
+
+        function clearAllData() {
+            if (confirm("Kya aap sach me pura khata reset karna chahte hain?")) {
+                transactions = [];
+                localStorage.removeItem(STORAGE_KEY);
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('ledgerTableBody');
+            tbody.innerHTML = '';
+            let sumSales = 0, sumDue = 0, sumPaid = 0;
+
+            if (transactions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Abhi koi hisaab nahi hai. Upar bol kar entry karein.</td></tr>`;
+            }
+
+            transactions.forEach(t => {
+                sumSales += t.total;
+                sumDue += t.due;
+                sumPaid += t.paid;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                
+                const cleanPhone = t.phone.replace(/[^0-9]/g, '');
+                const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                
+                const msg = encodeURIComponent(`Namaste ${t.name} ji,\nAapka hisaab:\n• Saaman: ${t.item}\n• Kul Raashi (Total): ₹${t.total}\n• Jama (Paid): ₹${t.paid}\n• Shesh Baaki (Due): ₹${t.due}\nKripya balance clear kar dein. Dhanyawad!`);
+                const waLink = `https://wa.me/${targetPhone}?text=${msg}`;
+
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${t.name}</td>
+                    <td class="p-3 text-slate-700">${t.item}</td>
+                    <td class="p-3 font-medium">₹${t.total.toLocaleString('en-IN')}</td>
+                    <td class="p-3 text-emerald-600 font-medium">₹${t.paid.toLocaleString('en-IN')}</td>
+                    <td class="p-3 text-rose-600 font-bold">₹${t.due.toLocaleString('en-IN')}</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="printSlip(${t.id})" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-900 text-white font-medium px-2.5 py-1.5 rounded-lg shadow-sm">
+                            <i class="fa-solid fa-print mr-1"></i> Parchi
+                        </button>
+                        <a href="${waLink}" target="_blank" class="inline-flex items-center text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1.5 rounded-lg shadow-sm">
+                            <i class="fa-brands fa-whatsapp text-sm mr-1"></i> WhatsApp
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalSales').innerText = '₹' + sumSales.toLocaleString('en-IN');
+            document.getElementById('totalDue').innerText = '₹' + sumDue.toLocaleString('en-IN');
+            document.getElementById('totalPaid').innerText = '₹' + sumPaid.toLocaleString('en-IN');
+        }
+
+        window.addEventListener('DOMContentLoaded', loadTransactions);
+    </script>
+</body>
+</html>
