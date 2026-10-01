@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BolKhata - Voice Ledger & Bill Print</title>
+    <title>BolKhata - Smart Voice Ledger & Billing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -30,7 +30,32 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <!-- Top Navigation with Editable Shop Name -->
+    <!-- Activation Lock Modal (Bina key dale app nahi chalega) -->
+    <div id="activationModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl text-center border border-slate-200">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">BolKhata License Lock</h2>
+            <p class="text-xs text-slate-500 mt-1">Is dukaan ke liye BolKhata smart service activate karein</p>
+
+            <div class="my-5 space-y-3">
+                <input id="licenseInput" type="text" placeholder="License Key Daalein (e.g. BOL-999)" class="w-full text-center tracking-widest uppercase font-mono font-bold text-sm bg-slate-50 border border-slate-300 rounded-lg p-3 outline-none focus:border-indigo-600">
+                <p id="lockError" class="text-xs text-rose-500 hidden font-medium">Galat License Key! Support se sampark karein.</p>
+            </div>
+
+            <button onclick="verifyLicense()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg shadow-md transition text-sm">
+                Unlock Karein
+            </button>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+                <p>Nayi dukaan ke activation ke liye sampark karein:</p>
+                <p class="font-bold text-slate-700 mt-0.5">WhatsApp / Call Support</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation -->
     <header class="bg-indigo-700 text-white shadow-md p-4 sticky top-0 z-30">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -42,12 +67,12 @@
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                     </div>
-                    <span class="text-[11px] text-indigo-200">BolKhata Smart Ledger</span>
+                    <span class="text-[11px] text-indigo-200">BolKhata Pro Edition</span>
                 </div>
             </div>
             <div class="text-xs text-indigo-100 flex items-center">
                 <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                Ready
+                License Active
             </div>
         </div>
     </header>
@@ -72,7 +97,7 @@
 
         <!-- Voice Recorder Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
-            <p class="text-xs font-semibold tracking-wider text-indigo-600 uppercase mb-2">Bol Kar Khata Update Karein</p>
+            <p class="text-xs font-semibold tracking-wider text-indigo-600 uppercase mb-2">Sirf Bol Kar Khata Update Karein</p>
             <h2 class="text-base md:text-lg font-semibold text-slate-700 mb-4">Mic dabayein aur boliye (Hinglish / Hindi)</h2>
 
             <div class="flex justify-center my-3">
@@ -87,13 +112,13 @@
             </p>
 
             <div class="mt-4 pt-4 border-t border-slate-100">
-                <p class="text-xs text-slate-400 mb-2">Demo buttons click karein:</p>
+                <p class="text-xs text-slate-400 mb-2">Nahi bolna chahte? Demo test karein:</p>
                 <div class="flex flex-wrap gap-2 justify-center text-xs">
-                    <button onclick="simulateVoice('Gupta ji ko 5 kilo cheeni 45 per kg di, 100 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-3 rounded-full border border-slate-200">
-                        🛒 Cheeni Demo
+                    <button onclick="simulateVoice('Gupta ji ko 5 kilo cheeni 45 per kg di, 100 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
+                        🛒 Kirana Demo
                     </button>
-                    <button onclick="simulateVoice('Ramesh ko 20 bori cement 350 rate se di, 2000 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-3 rounded-full border border-slate-200">
-                        🏗️ Cement Demo
+                    <button onclick="simulateVoice('Ramesh thekedar ko 20 bag cement 350 per bag bheja, 2000 cash mila')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
+                        🏗️ Hardware Demo
                     </button>
                 </div>
             </div>
@@ -148,9 +173,15 @@
                 <h3 class="font-bold text-slate-800 flex items-center">
                     <i class="fa-solid fa-book-bookmark text-indigo-600 mr-2"></i> Grahak Ledger
                 </h3>
-                <button onclick="clearAllData()" class="text-xs text-rose-500 hover:text-rose-700 font-medium">
-                    <i class="fa-solid fa-trash mr-1"></i> Reset Khata
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="lockAppManually()" class="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                        <i class="fa-solid fa-lock mr-1"></i> Lock App
+                    </button>
+                    <span class="text-slate-300">|</span>
+                    <button onclick="clearAllData()" class="text-xs text-rose-500 hover:text-rose-700 font-medium">
+                        <i class="fa-solid fa-trash mr-1"></i> Reset Khata
+                    </button>
+                </div>
             </div>
             
             <div class="overflow-x-auto">
@@ -158,7 +189,7 @@
                     <thead class="bg-slate-50 text-xs uppercase text-slate-500">
                         <tr>
                             <th class="p-3">Grahak Name</th>
-                            <th class="p-3">Samaan / Vivaran</th>
+                            <th class="p-3">Samaan / Item</th>
                             <th class="p-3">Total (₹)</th>
                             <th class="p-3">Jama (₹)</th>
                             <th class="p-3">Baaki Udhari (₹)</th>
@@ -190,16 +221,54 @@
             <div class="flex justify-between font-bold text-sm"><span>Shesh Baaki (Due):</span><span id="receiptDue"></span></div>
         </div>
         <div class="text-center pt-3 text-[10px] text-slate-500">
-            <p>Aapka hisaab safe hai. Dhanyawad!</p>
+            <p>Aapka hisaab surakshit hai. Dhanyawad!</p>
         </div>
     </div>
 
     <script>
-        const STORAGE_KEY = "bolkhata_records_universal_v3";
-        const SHOP_KEY = "bolkhata_shop_name";
+        const STORAGE_KEY = "bolkhata_records_universal_v4";
+        const SHOP_KEY = "bolkhata_shop_name_v4";
+        const LICENSE_STATUS_KEY = "bolkhata_unlocked_status";
+
+        // Secret Master Passkeys (Aap yahan apni pasand ki keys rakh sakte hain)
+        const VALID_KEYS = ["BOL999", "BOL786", "VIKAS2026", "BOLKHATA100"];
+
         let transactions = [];
         let recognition = null;
         let isListening = false;
+
+        // Check License Lock on Startup
+        function checkActivation() {
+            const isUnlocked = localStorage.getItem(LICENSE_STATUS_KEY);
+            const modal = document.getElementById('activationModal');
+            if (isUnlocked === "true") {
+                modal.classList.add('hidden');
+                loadTransactions();
+            } else {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function verifyLicense() {
+            const inputKey = document.getElementById('licenseInput').value.trim().toUpperCase();
+            const err = document.getElementById('lockError');
+
+            if (VALID_KEYS.includes(inputKey)) {
+                localStorage.setItem(LICENSE_STATUS_KEY, "true");
+                document.getElementById('activationModal').classList.add('hidden');
+                err.classList.add('hidden');
+                loadTransactions();
+            } else {
+                err.classList.remove('hidden');
+            }
+        }
+
+        function lockAppManually() {
+            if (confirm("Kya aap app ko wapas lock karna chahte hain?")) {
+                localStorage.removeItem(LICENSE_STATUS_KEY);
+                checkActivation();
+            }
+        }
 
         function editShopName() {
             const current = localStorage.getItem(SHOP_KEY) || "Meri Dukaan";
@@ -418,7 +487,7 @@
             document.getElementById('totalPaid').innerText = '₹' + sumPaid.toLocaleString('en-IN');
         }
 
-        window.addEventListener('DOMContentLoaded', loadTransactions);
+        window.addEventListener('DOMContentLoaded', checkActivation);
     </script>
 </body>
 </html>
