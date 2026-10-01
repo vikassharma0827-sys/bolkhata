@@ -40,7 +40,7 @@
             <p class="text-xs text-slate-500 mt-1">Is dukaan ke liye BolKhata smart service activate karein</p>
 
             <div class="my-5 space-y-3">
-                <input id="licenseInput" type="text" placeholder="License Key Daalein (e.g. BOL-999)" class="w-full text-center tracking-widest uppercase font-mono font-bold text-sm bg-slate-50 border border-slate-300 rounded-lg p-3 outline-none focus:border-indigo-600">
+                <input id="licenseInput" type="text" placeholder="License Key Daalein (e.g. BOL999)" class="w-full text-center tracking-widest uppercase font-mono font-bold text-sm bg-slate-50 border border-slate-300 rounded-lg p-3 outline-none focus:border-indigo-600">
                 <p id="lockError" class="text-xs text-rose-500 hidden font-medium">Galat License Key! Support se sampark karein.</p>
             </div>
 
@@ -230,14 +230,13 @@
         const SHOP_KEY = "bolkhata_shop_name_v4";
         const LICENSE_STATUS_KEY = "bolkhata_unlocked_status";
 
-        // Secret Master Passkeys (Aap yahan apni pasand ki keys rakh sakte hain)
+        // Secret Master Passkeys (Aap yahan nayi keys add kar sakte hain)
         const VALID_KEYS = ["BOL999", "BOL786", "VIKAS2026", "BOLKHATA100"];
 
         let transactions = [];
         let recognition = null;
         let isListening = false;
 
-        // Check License Lock on Startup
         function checkActivation() {
             const isUnlocked = localStorage.getItem(LICENSE_STATUS_KEY);
             const modal = document.getElementById('activationModal');
