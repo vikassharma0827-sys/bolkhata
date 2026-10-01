@@ -30,7 +30,22 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <!-- Activation Lock Modal -->
+    <!-- 1. Custom Animated Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 bg-gradient-to-br from-indigo-800 via-indigo-900 to-slate-900 z-[100] flex flex-col items-center justify-center text-white transition-opacity duration-500">
+        <div class="w-24 h-24 bg-white/10 rounded-3xl p-4 flex items-center justify-center border border-white/20 shadow-2xl backdrop-blur-md mb-4 animate-bounce">
+            <i class="fa-solid fa-microphone-lines text-4xl text-yellow-300"></i>
+        </div>
+        <h1 class="text-3xl font-black tracking-widest">BOLKHATA</h1>
+        <p class="text-xs text-indigo-200 mt-1 font-medium tracking-wide uppercase">Smart Voice Ledger & Billing</p>
+        
+        <!-- Loading Progress Bar -->
+        <div class="w-36 h-1 bg-white/20 rounded-full mt-8 overflow-hidden">
+            <div class="w-full h-full bg-yellow-400 animate-pulse"></div>
+        </div>
+        <span class="text-[10px] text-indigo-300 mt-2">Dukaan ka hisaab load ho raha hai...</span>
+    </div>
+
+    <!-- 2. Activation Lock Modal -->
     <div id="activationModal" class="hidden fixed inset-0 bg-slate-900/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center border border-slate-200">
             <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
@@ -69,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Restore Data Modal -->
+    <!-- 3. Restore Data Modal -->
     <div id="restoreModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white max-w-md w-full rounded-2xl p-5 shadow-xl border border-slate-200">
             <h3 class="text-base font-bold text-slate-800 flex items-center">
@@ -88,7 +103,7 @@
         </div>
     </div>
 
-    <!-- Top Navigation -->
+    <!-- 4. Top Navigation Bar -->
     <header class="bg-indigo-700 text-white shadow-md p-4 sticky top-0 z-30">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -149,7 +164,7 @@
                     🛒 Kirana Demo
                 </button>
                 <button onclick="simulateVoice('Ramesh thekedar ko 20 bag cement 350 per bag bheja, 2000 cash mila')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
-                    🏗️ Hardware Demo
+                    🏗️️ Hardware Demo
                 </button>
             </div>
         </section>
@@ -268,10 +283,10 @@
         const MY_UPI_ID = "7505456864@pthdfc";
         const LICENSE_PRICE = "499";
 
-        const STORAGE_KEY = "bolkhata_records_v8";
-        const SHOP_KEY = "bolkhata_shop_name_v8";
-        const SHOP_UPI_KEY = "bolkhata_shop_upi_v8";
-        const OWNER_PHONE_KEY = "bolkhata_owner_phone_v8";
+        const STORAGE_KEY = "bolkhata_records_v9";
+        const SHOP_KEY = "bolkhata_shop_name_v9";
+        const SHOP_UPI_KEY = "bolkhata_shop_upi_v9";
+        const OWNER_PHONE_KEY = "bolkhata_owner_phone_v9";
         const LICENSE_STATUS_KEY = "bolkhata_unlocked_status";
 
         // Master Keys
@@ -280,6 +295,17 @@
         let transactions = [];
         let recognition = null;
         let isListening = false;
+
+        // Splash Screen Loading Handler
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if (splash) {
+                    splash.classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => splash.remove(), 500);
+                }
+            }, 1500);
+        });
 
         function checkActivation() {
             const isUnlocked = localStorage.getItem(LICENSE_STATUS_KEY);
