@@ -30,28 +30,43 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <!-- Activation Lock Modal (Bina key dale app nahi chalega) -->
-    <div id="activationModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl text-center border border-slate-200">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
-                <i class="fa-solid fa-lock"></i>
+    <!-- Activation Lock Modal -->
+    <div id="activationModal" class="hidden fixed inset-0 bg-slate-900/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center border border-slate-200">
+            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
             <h2 class="text-xl font-bold text-slate-800">BolKhata License Lock</h2>
-            <p class="text-xs text-slate-500 mt-1">Is dukaan ke liye BolKhata smart service activate karein</p>
+            <p class="text-xs text-slate-500 mt-0.5">Is dukaan ke liye lifetime license activate karein</p>
 
-            <div class="my-5 space-y-3">
-                <input id="licenseInput" type="text" placeholder="License Key Daalein (e.g. BOL999)" class="w-full text-center tracking-widest uppercase font-mono font-bold text-sm bg-slate-50 border border-slate-300 rounded-lg p-3 outline-none focus:border-indigo-600">
-                <p id="lockError" class="text-xs text-rose-500 hidden font-medium">Galat License Key! Support se sampark karein.</p>
+            <!-- Developer Payment Box with QR Code -->
+            <div class="my-4 p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+                <div class="flex items-center justify-between text-xs font-bold text-emerald-800 mb-2">
+                    <span>Activation Fee:</span>
+                    <span class="text-base text-emerald-700">₹499 Only</span>
+                </div>
+                
+                <!-- Dynamic QR Code for Direct Scan -->
+                <div class="bg-white p-2 rounded-lg inline-block shadow-sm border border-emerald-100">
+                    <img id="upiQrCode" src="" alt="Scan & Pay ₹499" class="w-36 h-36 mx-auto">
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1 font-mono">UPI ID: 7505456864@pthdfc</p>
+                
+                <a id="payToDevBtn" href="#" class="mt-2.5 block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 rounded-lg shadow-sm transition">
+                    <i class="fa-solid fa-wallet mr-1"></i> Pay ₹499 via PhonePe / GPay
+                </a>
+            </div>
+
+            <!-- License Key Input Box -->
+            <div class="space-y-1.5 mb-3 text-left">
+                <label class="text-[11px] font-semibold text-slate-600">Payment ke baad mili License Key daalein:</label>
+                <input id="licenseInput" type="text" placeholder="e.g. BOL999" class="w-full text-center tracking-widest uppercase font-mono font-bold text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 outline-none focus:border-indigo-600">
+                <p id="lockError" class="text-xs text-rose-500 hidden font-medium text-center">Galat Key! Sahi key enter karein.</p>
             </div>
 
             <button onclick="verifyLicense()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg shadow-md transition text-sm">
-                Unlock Karein
+                App Unlock Karein
             </button>
-
-            <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
-                <p>Nayi dukaan ke activation ke liye sampark karein:</p>
-                <p class="font-bold text-slate-700 mt-0.5">WhatsApp / Call Support</p>
-            </div>
         </div>
     </div>
 
@@ -63,16 +78,16 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <h1 id="shopNameDisplay" class="text-xl font-bold tracking-wide">Meri Dukaan</h1>
-                        <button onclick="editShopName()" class="text-xs text-indigo-200 hover:text-white">
-                            <i class="fa-solid fa-pen-to-square"></i>
+                        <button onclick="editShopSettings()" class="text-xs text-indigo-200 hover:text-white" title="Settings">
+                            <i class="fa-solid fa-gear"></i>
                         </button>
                     </div>
-                    <span class="text-[11px] text-indigo-200">BolKhata Pro Edition</span>
+                    <span id="shopUpiDisplay" class="text-[11px] text-indigo-200">UPI: Not Set</span>
                 </div>
             </div>
             <div class="text-xs text-indigo-100 flex items-center">
                 <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                License Active
+                Active
             </div>
         </div>
     </header>
@@ -111,16 +126,13 @@
                 "Sharma ji ko 10 bori cement 350 rate se bheja, 1000 cash mila"
             </p>
 
-            <div class="mt-4 pt-4 border-t border-slate-100">
-                <p class="text-xs text-slate-400 mb-2">Nahi bolna chahte? Demo test karein:</p>
-                <div class="flex flex-wrap gap-2 justify-center text-xs">
-                    <button onclick="simulateVoice('Gupta ji ko 5 kilo cheeni 45 per kg di, 100 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
-                        🛒 Kirana Demo
-                    </button>
-                    <button onclick="simulateVoice('Ramesh thekedar ko 20 bag cement 350 per bag bheja, 2000 cash mila')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
-                        🏗️ Hardware Demo
-                    </button>
-                </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-2 justify-center text-xs">
+                <button onclick="simulateVoice('Gupta ji ko 5 kilo cheeni 45 per kg di, 100 jama')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
+                    🛒 Kirana Demo
+                </button>
+                <button onclick="simulateVoice('Ramesh thekedar ko 20 bag cement 350 per bag bheja, 2000 cash mila')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-full border border-slate-200">
+                    🏗️ Hardware Demo
+                </button>
             </div>
         </section>
 
@@ -189,7 +201,7 @@
                     <thead class="bg-slate-50 text-xs uppercase text-slate-500">
                         <tr>
                             <th class="p-3">Grahak Name</th>
-                            <th class="p-3">Samaan / Item</th>
+                            <th class="p-3">Samaan</th>
                             <th class="p-3">Total (₹)</th>
                             <th class="p-3">Jama (₹)</th>
                             <th class="p-3">Baaki Udhari (₹)</th>
@@ -203,11 +215,11 @@
 
     </main>
 
-    <!-- Hidden Bill Receipt for Printing -->
+    <!-- Printable Receipt -->
     <div id="printableReceipt" class="hidden max-w-sm mx-auto p-6 bg-white border border-dashed border-slate-400 font-mono text-xs text-slate-900">
         <div class="text-center pb-3 border-b border-slate-300">
             <h2 id="receiptShopName" class="text-base font-bold uppercase">Meri Dukaan</h2>
-            <p class="text-[10px] text-slate-500">BOLKHATA CASH MEMO / RECEIPT</p>
+            <p class="text-[10px] text-slate-500">BOLKHATA CASH MEMO</p>
             <p id="receiptDate" class="text-[10px] text-slate-500"></p>
         </div>
         <div class="py-3 border-b border-slate-300 space-y-1">
@@ -216,7 +228,7 @@
             <p><strong>Item:</strong> <span id="receiptItem"></span></p>
         </div>
         <div class="py-3 border-b border-slate-300 space-y-1">
-            <div class="flex justify-between"><span>Kul Raashi (Total):</span><span id="receiptTotal" class="font-bold"></span></div>
+            <div class="flex justify-between"><span>Total:</span><span id="receiptTotal" class="font-bold"></span></div>
             <div class="flex justify-between"><span>Jama (Paid):</span><span id="receiptPaid"></span></div>
             <div class="flex justify-between font-bold text-sm"><span>Shesh Baaki (Due):</span><span id="receiptDue"></span></div>
         </div>
@@ -226,11 +238,16 @@
     </div>
 
     <script>
-        const STORAGE_KEY = "bolkhata_records_universal_v4";
-        const SHOP_KEY = "bolkhata_shop_name_v4";
+        // DEVELOPER AAPKI UPI DETAILS (7505456864@pthdfc)
+        const MY_UPI_ID = "7505456864@pthdfc";
+        const LICENSE_PRICE = "499";
+
+        const STORAGE_KEY = "bolkhata_records_v5";
+        const SHOP_KEY = "bolkhata_shop_name_v5";
+        const SHOP_UPI_KEY = "bolkhata_shop_upi_v5";
         const LICENSE_STATUS_KEY = "bolkhata_unlocked_status";
 
-        // Secret Master Passkeys (Aap yahan nayi keys add kar sakte hain)
+        // Master Keys
         const VALID_KEYS = ["BOL999", "BOL786", "VIKAS2026", "BOLKHATA100"];
 
         let transactions = [];
@@ -240,6 +257,15 @@
         function checkActivation() {
             const isUnlocked = localStorage.getItem(LICENSE_STATUS_KEY);
             const modal = document.getElementById('activationModal');
+            
+            // Set payment button link and QR Code image
+            const upiString = `upi://pay?pa=${MY_UPI_ID}&pn=BolKhata%20License&am=${LICENSE_PRICE}&cu=INR&tn=BolKhata%20Activation`;
+            document.getElementById('payToDevBtn').href = upiString;
+            
+            // Generate QR Code via standard API
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
+            document.getElementById('upiQrCode').src = qrUrl;
+
             if (isUnlocked === "true") {
                 modal.classList.add('hidden');
                 loadTransactions();
@@ -263,19 +289,28 @@
         }
 
         function lockAppManually() {
-            if (confirm("Kya aap app ko wapas lock karna chahte hain?")) {
+            if (confirm("App ko wapas lock karna chahte hain?")) {
                 localStorage.removeItem(LICENSE_STATUS_KEY);
                 checkActivation();
             }
         }
 
-        function editShopName() {
-            const current = localStorage.getItem(SHOP_KEY) || "Meri Dukaan";
-            const updated = prompt("Apni Dukaan ka naam likhein:", current);
-            if (updated && updated.trim()) {
-                localStorage.setItem(SHOP_KEY, updated.trim());
-                document.getElementById('shopNameDisplay').innerText = updated.trim();
+        function editShopSettings() {
+            const currentName = localStorage.getItem(SHOP_KEY) || "Meri Dukaan";
+            const currentUpi = localStorage.getItem(SHOP_UPI_KEY) || "";
+
+            const updatedName = prompt("Dukaan ka naam likhein:", currentName);
+            if (updatedName && updatedName.trim()) {
+                localStorage.setItem(SHOP_KEY, updatedName.trim());
+                document.getElementById('shopNameDisplay').innerText = updatedName.trim();
             }
+
+            const updatedUpi = prompt("Dukandar ki UPI ID daalein (Customer payment direct lene ke liye):", currentUpi);
+            if (updatedUpi !== null) {
+                localStorage.setItem(SHOP_UPI_KEY, updatedUpi.trim());
+                document.getElementById('shopUpiDisplay').innerText = updatedUpi.trim() ? `UPI: ${updatedUpi.trim()}` : "UPI: Not Set";
+            }
+            renderTable();
         }
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -377,6 +412,9 @@
             const savedShop = localStorage.getItem(SHOP_KEY);
             if (savedShop) document.getElementById('shopNameDisplay').innerText = savedShop;
 
+            const savedUpi = localStorage.getItem(SHOP_UPI_KEY);
+            if (savedUpi) document.getElementById('shopUpiDisplay').innerText = `UPI: ${savedUpi}`;
+
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try { transactions = JSON.parse(stored); } catch(e) { transactions = []; }
@@ -433,7 +471,7 @@
         }
 
         function clearAllData() {
-            if (confirm("Kya aap sach me pura khata reset karna chahte hain?")) {
+            if (confirm("Pura khata reset karna chahte hain?")) {
                 transactions = [];
                 localStorage.removeItem(STORAGE_KEY);
                 renderTable();
@@ -444,9 +482,10 @@
             const tbody = document.getElementById('ledgerTableBody');
             tbody.innerHTML = '';
             let sumSales = 0, sumDue = 0, sumPaid = 0;
+            const shopUpi = localStorage.getItem(SHOP_UPI_KEY) || "";
 
             if (transactions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Abhi koi hisaab nahi hai. Upar bol kar entry karein.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Abhi koi entry nahi hai. Mic se bol kar save karein.</td></tr>`;
             }
 
             transactions.forEach(t => {
@@ -460,7 +499,12 @@
                 const cleanPhone = t.phone.replace(/[^0-9]/g, '');
                 const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
                 
-                const msg = encodeURIComponent(`Namaste ${t.name} ji,\nAapka hisaab:\n• Saaman: ${t.item}\n• Kul Raashi (Total): ₹${t.total}\n• Jama (Paid): ₹${t.paid}\n• Shesh Baaki (Due): ₹${t.due}\nKripya balance clear kar dein. Dhanyawad!`);
+                let upiPayText = "";
+                if (shopUpi && t.due > 0) {
+                    upiPayText = `\n\nOnline Payment Link:\nupi://pay?pa=${shopUpi}&pn=Shop&am=${t.due}&cu=INR`;
+                }
+
+                const msg = encodeURIComponent(`Namaste ${t.name} ji,\nAapka hisaab:\n• Saaman: ${t.item}\n• Kul Raashi: ₹${t.total}\n• Jama Mila: ₹${t.paid}\n• Shesh Baaki: ₹${t.due}${upiPayText}\n\nKripya baaki raashi clear karein. Dhanyawad!`);
                 const waLink = `https://wa.me/${targetPhone}?text=${msg}`;
 
                 tr.innerHTML = `
